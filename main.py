@@ -15,9 +15,12 @@ STARTER_CITY = 0
 POPULATION = 100
 NUM_CITIES = 10
 GENERATION = 100
+MUTATION_RATE = 0.1
+CROSSOVER_RATE = 0.9
 
 def main():
     dist_matrix = parser()
+    plateau_counter = 0
 
     # Initialize the population
     init_population = initial_population(STARTER_CITY, POPULATION, NUM_CITIES)
@@ -45,12 +48,16 @@ def main():
             parent2 = tournament(current_population, 3)
 
             # Crossover the two parents!
-            child1, child2 = order_crossover(parent1.sequence, parent2.sequence, STARTER_CITY)
+            if random.random() < CROSSOVER_RATE:
+                child1, child2 = order_crossover(parent1.sequence, parent2.sequence, STARTER_CITY)
+            else:
+                child1 = parent1.sequence
+                child2 = parent2.sequence
 
             # Do mutation based on probability
-            if random.random() < 0.1:
+            if random.random() < MUTATION_RATE:
                 child1 = interchange_mutation(child1)
-            if random.random() < 0.1:
+            if random.random() < MUTATION_RATE:
                 child2 = interchange_mutation(child2)
 
             # Evaluate their fitness
@@ -67,9 +74,15 @@ def main():
         generation_best = min(current_population, key=lambda x: x.fitness)
         if generation_best.fitness < best_solution.fitness:
             best_solution = generation_best
+            plateau_counter = 0
+        else:
+            plateau_counter += 1
 
         end_time = time.time()
         response_time = round(end_time - start_time, 4)
+
+        if plateau_counter >= 10:
+            break
         
         print(f"| {generation:<11} | ({generation_best.sequence})           | {round(generation_best.fitness, 3):<11} | {response_time:<18} |")
 
